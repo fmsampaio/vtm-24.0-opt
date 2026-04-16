@@ -50,6 +50,8 @@
 #include "EncModeCtrl.h"
 #include "EncLib.h"
 
+#include "CommonLib/TimeProfiler.h"
+
 #include <math.h>
 #include <limits>
 
@@ -4938,6 +4940,7 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
                                     const AMVPInfo &amvpInfo, bool bBi)
 #endif
 {
+  
 #if GDR_ENABLED
   if (pu.cu->cs->sps->getUseBcw() && pu.cu->bcwIdx != BCW_DEFAULT && !bBi
       && xReadBufferedUniMv(pu, eRefPicList, refIdxPred, rcMvPred, rcMv, rcMvSolid, ruiBits, ruiCost))
@@ -5022,6 +5025,10 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
   m_currRefPicList = eRefPicList;
   m_currRefPicIndex = refIdxPred;
   m_skipFracME = false;
+  
+  // Start time chrono of Integer ME  
+  TimeProfiler::start(IME);
+
   //  Do integer search
   if (m_motionEstimationSearchMethod == MESearchMethod::FULL || bBi || bQTBTMV)
   {
@@ -5116,6 +5123,9 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
     }
   }
 
+  // Stop time chrono of Integer ME
+    TimeProfiler::stop(IME);
+
   DTRACE( g_trace_ctx, D_ME, "%d %d %d :MECostFPel<L%d,%d>: %d,%d,%dx%d, %d", DTRACE_GET_COUNTER( g_trace_ctx, D_ME ), pu.cu->slice->getPOC(), 0, ( int ) eRefPicList, ( int ) bBi, pu.Y().x, pu.Y().y, pu.Y().width, pu.Y().height, ruiCost );
   // sub-pel refinement for sub-pel resolution
   if ( pu.cu->imv == 0 || pu.cu->imv == IMV_HPEL )
@@ -5157,6 +5167,7 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
     xPatternSearchIntRefine( pu, cStruct, rcMv, rcMvPred, riMVPIdx, ruiBits, ruiCost, amvpInfo, fWeight);
 #endif
   }
+  
   DTRACE(g_trace_ctx, D_ME, "   MECost<L%d,%d>: %6d (%d)  MV:%d,%d\n", (int)eRefPicList, (int)bBi, ruiCost, ruiBits, rcMv.getHor() << 2, rcMv.getVer() << 2);
 }
 

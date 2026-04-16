@@ -49,6 +49,8 @@
 
 #include "CommonLib/dtrace_buffer.h"
 
+#include "CommonLib/TimeProfiler.h"
+
 #include <stdio.h>
 #include <cmath>
 #include <algorithm>
@@ -754,6 +756,8 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
 
     if( currTestMode.type == ETM_INTER_ME )
     {
+      // Start time chrono of Inter-Frame Prediction
+      TimeProfiler::start(INTER_PRED);
       if( ( currTestMode.opts & ETO_IMV ) != 0 )
       {
         const bool skipAltHpelIF = (currTestMode.getAmvrSearchMode() == EncTestMode::AmvrSearchMode::HALF_PEL)
@@ -775,7 +779,8 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
         splitRdCostBest[CTU_LEVEL] = bestCS->cost;
         tempCS->splitRdCostBest = splitRdCostBest;
       }
-
+      // Stop time chrono of Inter-Frame Prediction
+      TimeProfiler::stop(INTER_PRED);
     }
     else if (currTestMode.type == ETM_HASH_INTER)
     {

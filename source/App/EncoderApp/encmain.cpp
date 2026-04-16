@@ -44,6 +44,8 @@
 #include "EncApp.h"
 #include "Utilities/program_options_lite.h"
 
+#include "CommonLib/TimeProfiler.h"
+
 //! \ingroup EncoderApp
 //! \{
 
@@ -258,6 +260,12 @@ int main(int argc, char* argv[])
   std::time_t startTime2 = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   fprintf(stdout, " started @ %s", std::ctime(&startTime2) );
   clock_t startClock = clock();
+  
+  // Initialize time profiler structures
+  TimeProfiler::init();
+
+  // Start time chrono of Encoder Overall
+  TimeProfiler::start(ENCODER);
 
   // call encoding function per layer
   bool eos = false;
@@ -332,6 +340,9 @@ int main(int argc, char* argv[])
   printf("\nMemory Usage: VmPeak= %d KB ( %.1f GiB ),  VmHWM= %d KB ( %.1f GiB )\n", vm, (double)vm/(1024*1024), rm, (double)rm/(1024*1024));
 #endif
 
+  // Stop time chrono of Inter-Frame Prediction
+  TimeProfiler::stop(ENCODER);
+
   // ending time
   clock_t endClock = clock();
   auto endTime = std::chrono::steady_clock::now();
@@ -386,6 +397,8 @@ int main(int argc, char* argv[])
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
 #endif
+
+  TimeProfiler::report();
 
   return 0;
 }
