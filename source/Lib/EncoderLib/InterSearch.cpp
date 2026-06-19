@@ -52,6 +52,8 @@
 
 #include "CommonLib/TimeProfiler.h"
 
+#include "MLSearchRangeOpt.h"
+
 #include <math.h>
 #include <limits>
 
@@ -4957,6 +4959,20 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
   CHECK(eRefPicList >= MAX_NUM_REF_LIST_ADAPT_SR || refIdxPred >= int(MAX_IDX_ADAPT_SR),
         "Invalid reference picture list");
   m_searchRange = m_adaptSR[eRefPicList][refIdxPred];
+
+  // TODO Aqui é o ponto (mais promissor) para definição dinâmica da área de busca  
+  #if ENABLE_DT_SR_OPT
+    MLSearchRangeOpt::defineStaticSearchRange();
+
+    m_searchRange = MLSearchRangeOpt::getDynSearchRange();
+
+    int xCU = pu.cu->lx();
+    int yCU = pu.cu->ly();
+    // int wCU = pu.cu->lwidth();
+    // int hCU = pu.cu->lheight()
+
+    std::cout << "[DBG] CU (" << xCU << "," << yCU << ") " << (bBi ? "Bi" : "Uni") << " - " << m_searchRange << std::endl;
+  #endif
 
   int    iSrchRng   = (bBi ? m_bipredSearchRange : m_searchRange);
   double fWeight    = 1.0;
