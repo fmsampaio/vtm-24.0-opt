@@ -47,6 +47,8 @@
 #include "CommonLib/SEIPackedRegionsInfoProcess.h"
 #include "CommonLib/ProfileTierLevel.h"
 
+#include "MLSearchRangeOpt.h"
+
 //! \ingroup EncoderLib
 //! \{
 
@@ -137,6 +139,11 @@ void EncLib::create( const int layerId )
 
 void EncLib::destroy ()
 {
+
+#if ENABLE_DT_SR_OPT
+  MLSearchRangeOpt::finish();
+#endif
+
   // destroy processing unit classes
   m_cGOPEncoder.        destroy();
   m_cSliceEncoder.      destroy();
@@ -156,6 +163,11 @@ void EncLib::destroy ()
 
 void EncLib::init(AUWriterIf *auWriterIf)
 {
+
+#if ENABLE_DT_SR_OPT
+  MLSearchRangeOpt::init(getSourceWidth(), getSourceHeight());
+#endif
+
   m_AUWriterIf = auWriterIf;
 
   SPS &sps0 = *(m_spsMap.allocatePS( m_vps->getGeneralLayerIdx( m_layerId ) )); // NOTE: implementations that use more than 1 SPS need to be aware of activation issues.

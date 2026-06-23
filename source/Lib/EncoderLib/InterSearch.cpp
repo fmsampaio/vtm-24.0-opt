@@ -4960,18 +4960,9 @@ void InterSearch::xMotionEstimation(PredictionUnit &pu, PelUnitBuf &origBuf, Ref
         "Invalid reference picture list");
   m_searchRange = m_adaptSR[eRefPicList][refIdxPred];
 
-  // TODO Aqui é o ponto (mais promissor) para definição dinâmica da área de busca  
+  // MLSearchRangeOpt: Here is the point where we stabilish the search range according to our ML Optimization Scheme  
   #if ENABLE_DT_SR_OPT
-    MLSearchRangeOpt::defineStaticSearchRange();
-
     m_searchRange = MLSearchRangeOpt::getDynSearchRange();
-
-    int xCU = pu.cu->lx();
-    int yCU = pu.cu->ly();
-    // int wCU = pu.cu->lwidth();
-    // int hCU = pu.cu->lheight()
-
-    std::cout << "[DBG] CU (" << xCU << "," << yCU << ") " << (bBi ? "Bi" : "Uni") << " - " << m_searchRange << std::endl;
   #endif
 
   int    iSrchRng   = (bBi ? m_bipredSearchRange : m_searchRange);

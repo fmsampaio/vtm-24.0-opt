@@ -50,6 +50,7 @@
 #include "CommonLib/dtrace_buffer.h"
 
 #include "CommonLib/TimeProfiler.h"
+#include "MLSearchRangeOpt.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -242,6 +243,17 @@ void EncCu::init( EncLib* pcEncLib, const SPS& sps )
 void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigned ctuRsAddr,
                         const EnumArray<int, ChannelType> &prevQP, const EnumArray<int, ChannelType> &currQP)
 {
+
+ // SearchRangeOpt: CTU-level definition of the Search Range 
+#if ENABLE_DT_SR_OPT
+  // TODO: collect all features for each DT model
+  // TODO: save features into static attibutes at MLSearchRangeOpt
+  
+  MLSearchRangeOpt::defineRandomSearchRange(); // Just for tests...
+  
+  // MLSearchRangeOpt::defineMLOptSearchRange();
+#endif 
+  
   m_modeCtrl->initCTUEncoding( *cs.slice );
   cs.treeType = TREE_D;
 
@@ -321,6 +333,57 @@ void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigne
   m_CABACEstimator->getCtx() = m_CurrCtx->start;
   m_CurrCtx                  = 0;
 
+#if ENABLE_DT_SR_OPT
+  int framePoc   = cs.slice->getPOC();
+  // Position ctuPos = area.blocks[COMPONENT_Y].pos();
+  // std::cout << "[DBG] CTU: (" <<  ctuPos.x << "," << ctuPos.y << ")\n";
+
+  for (const CodingUnit *cu = cs.getCU(area.blocks[COMPONENT_Y].pos(), ChannelType::LUMA); cu != nullptr; cu = cu->next) {
+    
+    if (CU::isInter(*cu))
+    {
+      Position cuPos = cu->blocks[COMPONENT_Y].pos();
+
+      // std::cout << "[DBG] CU: (" <<  cuPos.x << "," << cuPos.y << ") --> ";
+
+      int xCU = cuPos.x;
+      int yCU = cuPos.y;
+      const PredictionUnit& pu = *cu->firstPU;
+
+      int fracBits = MLSearchRangeOpt::getFracMvShift(cu->imv);
+
+      if(pu.refIdx[REF_PIC_LIST_0] >= 0) {
+
+        int x = pu.mv[REF_PIC_LIST_0].getHor() >> fracBits;
+        int y = pu.mv[REF_PIC_LIST_0].getVer() >> fracBits;
+
+        if(MLSearchRangeOpt::isQuadPelMv(cu->imv)) {
+          x <<= 2;
+          y <<= 2;
+        }
+
+        // std::cout << "L0 (" << x << "," << y << ") | ";
+
+        MLSearchRangeOpt::storeMv(framePoc, xCU, yCU, x, y, cu->imv);
+      }
+      if(pu.refIdx[REF_PIC_LIST_1] >= 0) {
+
+        int x = pu.mv[REF_PIC_LIST_1].getHor() >> fracBits;
+        int y = pu.mv[REF_PIC_LIST_1].getVer() >> fracBits;
+
+        if(MLSearchRangeOpt::isQuadPelMv(cu->imv)) {
+          x <<= 2;
+          y <<= 2;
+        }
+
+        // std::cout << "L1 (" << x << "," << y << ")";
+
+        MLSearchRangeOpt::storeMv(framePoc, xCU, yCU, x, y, cu->imv);
+      }
+      // std::cout << std::endl;
+    }
+  }
+#endif
 
   // Ensure that a coding was found
   // Selected mode's RD-cost must be not MAX_DOUBLE.

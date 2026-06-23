@@ -1,23 +1,129 @@
 #include "MLSearchRangeOpt.h"
 
 int MLSearchRangeOpt::dynSearchRange;
+std::vector<CtuData> MLSearchRangeOpt::mvStorage(MAX_FRAMES * MAX_CTUS_PER_FRAME);
+int MLSearchRangeOpt::numCtusWidth, MLSearchRangeOpt::numCtusHeight;
+std::ofstream MLSearchRangeOpt::reportFile("mvs_report.txt");
+
+/*
+ * Methods to init and finish routines 
+ */
+
+void MLSearchRangeOpt::init(int frameWidth, int frameHeight) {
+    numCtusWidth = std::ceil(frameWidth / 128.0);
+    numCtusHeight = std::ceil(frameHeight / 128.0);
+}
+
+void MLSearchRangeOpt::finish() {
+    reportFile.close();
+}
+
+/*
+ * Methods to handle integer MVs storage for features calculatuion
+ */
+
+void MLSearchRangeOpt::storeMv(int framePoc, int xCU, int yCU, int xMv, int yMv, uint8_t imv) {
+    int ctuPos = getCtuPos(framePoc, xCU, yCU);
+
+    CtuData& ctuData = mvStorage[ctuPos];
+    MvData& mvData = ctuData.listaMvsPerCtu[ctuData.quantidadeCus];
+    ctuData.quantidadeCus ++;
+
+    mvData.xMv = xMv;
+    mvData.yMv = yMv;
+    mvData.imv = imv;
+}
+
+void MLSearchRangeOpt::reportMvs(int framePoc) {
+    reportFile << "[INFO] FRAME " << framePoc << std::endl;
+    for (int yCtu = 0; yCtu < numCtusHeight; yCtu ++) {
+        for (int xCtu = 0; xCtu < numCtusWidth; xCtu ++) {          
+            int ctuPos = getCtuPos(framePoc, xCtu * 128, yCtu * 128);
+            CtuData& ctuData = mvStorage[ctuPos];
+            
+            reportFile << "[INFO] CTU (" << xCtu << "," << yCtu << ") [" << ctuData.quantidadeCus << "] {" << ctuPos << "}" << std::endl;
+            for (int posCu = 0; posCu < ctuData.quantidadeCus; posCu ++) {
+                MvData& mvData = ctuData.listaMvsPerCtu[posCu];
+                reportFile << "(" << mvData.xMv << "," << mvData.yMv << ")[" << static_cast<int>(mvData.imv) << "] ";
+            }
+            reportFile << std::endl;
+        }
+    }
+}
+
+/***
+ * Methods to dynamically define the search range
+ */
+ void MLSearchRangeOpt::defineMLOptSearchRange() {
+    // TODO Call DT logic according to our search range optimization scheme
+    // TODO As result, the static attribute "dynSearchRange" must be defined with the predicted search range
+
+    if(isWithin32()) {
+        dynSearchRange = 32;
+    }
+    else if(isWithin128()) {
+        dynSearchRange = 128;
+    }
+    else {
+        dynSearchRange = 384;
+    }
+}
 
 void MLSearchRangeOpt::defineStaticSearchRange() {
-    dynSearchRange = SR_MAXIMUM;
+    dynSearchRange = 32;
 }
 
 void MLSearchRangeOpt::defineRandomSearchRange() {
     std::srand(std::time(0));
 
     int randValue = std::rand() % 3;
-
     if(randValue == 0) {
-        dynSearchRange = SR_MINIMUM;
+        dynSearchRange = 32;
     }
     else if(randValue == 1) {
-        dynSearchRange = SR_MEDIUM;
+        dynSearchRange = 128;
     }
     else {
-        dynSearchRange = SR_MAXIMUM;
+        dynSearchRange = 384;
     }
+}
+
+/**
+ * Decision trees
+ */
+bool MLSearchRangeOpt::isWithin32() {
+    return true; //TODO implement decision tree logic
+}
+
+bool MLSearchRangeOpt::isWithin64() {
+    return true; //TODO implement decision tree logic
+}
+
+bool MLSearchRangeOpt::isWithin128() {
+    return true; //TODO implement decision tree logic
+}
+
+/**
+ * Utilitary methods
+ */
+
+int MLSearchRangeOpt::getFracMvShift(int imv) {
+    int fracBits;
+
+    // std::cout << "[DBG] IMV " << imv << std::endl;
+    switch (imv) {
+        case 1: // Modo 1-pel (Pixel inteiro)
+            fracBits = 0;
+            break;
+        case 2: // Modo 4-pel (Quad-pixel)
+            fracBits = 0;
+            break;
+        case 3: // Modo 1/4-pel
+            fracBits = 2;
+            break;
+        default: // case 0: Modo padrão 1/16-pel
+            fracBits = 4;
+            break;
+    }
+    return fracBits;
 }

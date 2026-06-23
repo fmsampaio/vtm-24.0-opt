@@ -44,6 +44,7 @@
 #include "CommonLib/dtrace_blockstatistics.h"
 #endif
 
+#include "MLSearchRangeOpt.h"
 
 #include <math.h>
 
@@ -1610,6 +1611,11 @@ void EncSlice::compressSlice( Picture* pcPic, const bool bCompressEntireSlice, c
   {
     m_pcLib->checkPltStats(pcPic);
   }
+  
+// TODO
+#if ENABLE_DT_SR_OPT && ENABLE_REPORT_MVS
+  MLSearchRangeOpt::reportMvs(pcPic->getPOC());
+#endif
 }
 
 void EncSlice::checkDisFracMmvd( Picture* pcPic, uint32_t startCtuTsAddr, uint32_t boundingCtuTsAddr )
