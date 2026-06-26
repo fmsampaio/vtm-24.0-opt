@@ -40,10 +40,7 @@ class MLSearchRangeOpt {
         static void storeMv(int framePoc, int xCU, int yCU, int xMv, int yMv, uint8_t imv);
         static void reportMvs(int framePoc);
 
-        static void defineRandomSearchRange();
-        static void defineStaticSearchRange();
-
-        static void collectFeatures();
+        static void collectFeatures(int framePoc, int xCTU, int yCTU);
         static void defineMLOptSearchRange();
 
         static bool isWithin32();       //TODO implement decision tree
@@ -74,5 +71,8 @@ class MLSearchRangeOpt {
             }
             return fracBits;
         }
-        static bool isQuadPelMv(int imv) { return imv == 2; }        
+        static bool isQuadPelMv(int imv) { return imv == 2; }       
+        
+        static int hasLeftCTU(int framePoc, int xCTU, int yCTU) { return (xCTU - 128) >= 0 ? getCtuPos(framePoc, xCTU - 128, yCTU) : -1; }
+        static int hasTopCTU(int framePoc, int xCTU, int yCTU) { return (yCTU - 128) >= 0 ? getCtuPos(framePoc, xCTU, yCTU - 128) : -1; }
 };

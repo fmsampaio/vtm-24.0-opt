@@ -29,12 +29,12 @@ void MLSearchRangeOpt::storeMv(int framePoc, int xCU, int yCU, int xMv, int yMv,
     MvData& mvData = ctuData.listaMvsPerCtu[ctuData.quantidadeCus];
     ctuData.quantidadeCus ++;
 
-    std::cout << "[" << static_cast<int>(imv) << "] MV (" << xMv << "," << yMv << ") --> ";
+    // std::cout << "[" << static_cast<int>(imv) << "] MV (" << xMv << "," << yMv << ") --> ";
 
     xMv = (xMv >= 0) ? (xMv + 8) >> 4 : -((-xMv + 8) >> 4);
     yMv = (yMv >= 0) ? (yMv + 8) >> 4 : -((-yMv + 8) >> 4);
 
-    std::cout << "(" << xMv << "," << yMv << ")" << std::endl;
+    // std::cout << "(" << xMv << "," << yMv << ")" << std::endl;
 
     mvData.xMv = xMv;
     mvData.yMv = yMv;
@@ -58,6 +58,23 @@ void MLSearchRangeOpt::reportMvs(int framePoc) {
     }
 }
 
+
+void MLSearchRangeOpt::collectFeatures(int framePoc, int xCTU, int yCTU) {
+    int leftCtuPos = hasLeftCTU(framePoc, xCTU, yCTU);
+    if(leftCtuPos != -1) {
+        std::cout << "[DBG] Has left CTU: ";
+        CtuData& leftCtuData = mvStorage[leftCtuPos];
+        std::cout << leftCtuData.quantidadeCus << " MVs" << std::endl;
+    }
+
+    int topCtuPos = hasTopCTU(framePoc, xCTU, yCTU);
+    if(topCtuPos != -1) {
+        std::cout << "[DBG] Has top CTU: ";
+        CtuData& topCtuData = mvStorage[topCtuPos];
+        std::cout << topCtuData.quantidadeCus << " MVs" << std::endl;
+    }
+}
+
 /***
  * Methods to dynamically define the search range
  */
@@ -69,25 +86,6 @@ void MLSearchRangeOpt::reportMvs(int framePoc) {
         dynSearchRange = 32;
     }
     else if(isWithin128()) {
-        dynSearchRange = 128;
-    }
-    else {
-        dynSearchRange = 384;
-    }
-}
-
-void MLSearchRangeOpt::defineStaticSearchRange() {
-    dynSearchRange = 32;
-}
-
-void MLSearchRangeOpt::defineRandomSearchRange() {
-    std::srand(std::time(0));
-
-    int randValue = std::rand() % 3;
-    if(randValue == 0) {
-        dynSearchRange = 32;
-    }
-    else if(randValue == 1) {
         dynSearchRange = 128;
     }
     else {

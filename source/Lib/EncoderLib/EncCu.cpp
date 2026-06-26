@@ -246,12 +246,16 @@ void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigne
 
  // SearchRangeOpt: CTU-level definition of the Search Range 
 #if ENABLE_DT_SR_OPT
-  // TODO: collect all features for each DT model
-  // TODO: save features into static attibutes at MLSearchRangeOpt
-  
-  MLSearchRangeOpt::defineRandomSearchRange(); // Just for tests...
-  
-  // MLSearchRangeOpt::defineMLOptSearchRange();
+  if (cs.slice->getSliceType() != I_SLICE) {  
+    // TODO: collect all features for each DT model
+    // TODO: save features into static attibutes at MLSearchRangeOpt
+
+    Position ctuPos = area.blocks[COMPONENT_Y].pos();
+    std::cout << "[DBG] CTU: (" <<  ctuPos.x << "," << ctuPos.y << ")\n";
+
+    MLSearchRangeOpt::collectFeatures(cs.slice->getPOC(), ctuPos.x, ctuPos.y);
+    // MLSearchRangeOpt::defineMLOptSearchRange();
+  }
 #endif 
   
   m_modeCtrl->initCTUEncoding( *cs.slice );
@@ -344,7 +348,7 @@ void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigne
     {
       Position cuPos = cu->blocks[COMPONENT_Y].pos();
 
-      std::cout << "[DBG] CU: (" <<  cuPos.x << "," << cuPos.y << ")" << std::endl;
+      // std::cout << "[DBG] CU: (" <<  cuPos.x << "," << cuPos.y << ")" << std::endl;
 
       int xCU = cuPos.x;
       int yCU = cuPos.y;
@@ -364,7 +368,7 @@ void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigne
 
         MLSearchRangeOpt::storeMv(framePoc, xCU, yCU, x, y, cu->imv);
       }
-      std::cout << std::endl;
+      // std::cout << std::endl;
     }
   }
 #endif
