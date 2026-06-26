@@ -54,6 +54,25 @@ class MLSearchRangeOpt {
         
         // Utilitary methods
         static int getCtuPos(int framePoc, int xCU, int yCU) { return  (framePoc * MAX_CTUS_PER_FRAME) + (xCU / 128) + ((yCU / 128) * numCtusWidth); }
-        static int getFracMvShift(int imv);
+        static int getFracMvShift(int imv) {
+             int fracBits;
+
+            // std::cout << "[DBG] IMV " << imv << std::endl;
+            switch (imv) {
+                case 1: // Modo 1-pel (Pixel inteiro)
+                    fracBits = 0;
+                    break;
+                case 2: // Modo 4-pel (Quad-pixel)
+                    fracBits = 0;
+                    break;
+                case 3: // Modo 1/4-pel
+                    fracBits = 2;
+                    break;
+                default: // case 0: Modo padrão 1/16-pel
+                    fracBits = 4;
+                    break;
+            }
+            return fracBits;
+        }
         static bool isQuadPelMv(int imv) { return imv == 2; }        
 };

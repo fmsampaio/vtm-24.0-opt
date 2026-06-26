@@ -344,43 +344,27 @@ void EncCu::compressCtu(CodingStructure &cs, const UnitArea &area, const unsigne
     {
       Position cuPos = cu->blocks[COMPONENT_Y].pos();
 
-      // std::cout << "[DBG] CU: (" <<  cuPos.x << "," << cuPos.y << ") --> ";
+      std::cout << "[DBG] CU: (" <<  cuPos.x << "," << cuPos.y << ")" << std::endl;
 
       int xCU = cuPos.x;
       int yCU = cuPos.y;
       const PredictionUnit& pu = *cu->firstPU;
 
-      int fracBits = MLSearchRangeOpt::getFracMvShift(cu->imv);
-
       if(pu.refIdx[REF_PIC_LIST_0] >= 0) {
 
-        int x = pu.mv[REF_PIC_LIST_0].getHor() >> fracBits;
-        int y = pu.mv[REF_PIC_LIST_0].getVer() >> fracBits;
-
-        if(MLSearchRangeOpt::isQuadPelMv(cu->imv)) {
-          x <<= 2;
-          y <<= 2;
-        }
-
-        // std::cout << "L0 (" << x << "," << y << ") | ";
+        int x = pu.mv[REF_PIC_LIST_0].getHor();
+        int y = pu.mv[REF_PIC_LIST_0].getVer();
 
         MLSearchRangeOpt::storeMv(framePoc, xCU, yCU, x, y, cu->imv);
       }
       if(pu.refIdx[REF_PIC_LIST_1] >= 0) {
 
-        int x = pu.mv[REF_PIC_LIST_1].getHor() >> fracBits;
-        int y = pu.mv[REF_PIC_LIST_1].getVer() >> fracBits;
-
-        if(MLSearchRangeOpt::isQuadPelMv(cu->imv)) {
-          x <<= 2;
-          y <<= 2;
-        }
-
-        // std::cout << "L1 (" << x << "," << y << ")";
+        int x = pu.mv[REF_PIC_LIST_1].getHor();
+        int y = pu.mv[REF_PIC_LIST_1].getVer();
 
         MLSearchRangeOpt::storeMv(framePoc, xCU, yCU, x, y, cu->imv);
       }
-      // std::cout << std::endl;
+      std::cout << std::endl;
     }
   }
 #endif

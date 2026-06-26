@@ -29,9 +29,16 @@ void MLSearchRangeOpt::storeMv(int framePoc, int xCU, int yCU, int xMv, int yMv,
     MvData& mvData = ctuData.listaMvsPerCtu[ctuData.quantidadeCus];
     ctuData.quantidadeCus ++;
 
+    std::cout << "[" << static_cast<int>(imv) << "] MV (" << xMv << "," << yMv << ") --> ";
+
+    xMv = (xMv >= 0) ? (xMv + 8) >> 4 : -((-xMv + 8) >> 4);
+    yMv = (yMv >= 0) ? (yMv + 8) >> 4 : -((-yMv + 8) >> 4);
+
+    std::cout << "(" << xMv << "," << yMv << ")" << std::endl;
+
     mvData.xMv = xMv;
     mvData.yMv = yMv;
-    mvData.imv = imv;
+    mvData.imv = static_cast<int>(imv);
 }
 
 void MLSearchRangeOpt::reportMvs(int framePoc) {
@@ -101,29 +108,4 @@ bool MLSearchRangeOpt::isWithin64() {
 
 bool MLSearchRangeOpt::isWithin128() {
     return true; //TODO implement decision tree logic
-}
-
-/**
- * Utilitary methods
- */
-
-int MLSearchRangeOpt::getFracMvShift(int imv) {
-    int fracBits;
-
-    // std::cout << "[DBG] IMV " << imv << std::endl;
-    switch (imv) {
-        case 1: // Modo 1-pel (Pixel inteiro)
-            fracBits = 0;
-            break;
-        case 2: // Modo 4-pel (Quad-pixel)
-            fracBits = 0;
-            break;
-        case 3: // Modo 1/4-pel
-            fracBits = 2;
-            break;
-        default: // case 0: Modo padrão 1/16-pel
-            fracBits = 4;
-            break;
-    }
-    return fracBits;
 }
